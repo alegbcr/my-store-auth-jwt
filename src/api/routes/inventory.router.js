@@ -1,7 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const passport = require('passport');
+
 const InventoryService = require('../services/inventory.service');
+
+const { checkRoles } = require('../middlewares/auth.handler');
 const validatorHandler = require('../middlewares/validator.handler');
+
 const {
   createInventorySchema,
   // updateInventorySchema,
@@ -10,13 +15,20 @@ const {
 
 const service = new InventoryService();
 
-router.get('/', async (req, res) => {
-  const inventory = await service.find();
-  res.json(inventory);
-});
+router.get(
+  '/',
+  passport.authenticate('jwt', { session: false }),
+  checkRoles('admin'),
+  async (req, res) => {
+    const inventory = await service.find();
+    res.json(inventory);
+  }
+);
 
 router.post(
   '/',
+  passport.authenticate('jwt', { session: false }),
+  checkRoles('admin'),
   validatorHandler(createInventorySchema, 'body'),
   async (req, res, next) => {
     try {
